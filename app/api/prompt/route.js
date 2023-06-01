@@ -13,3 +13,4 @@ export const GET = async (request) => {
     return new NextResponse("Failed to fetch all prompts", { status: 500 });
   }
 };
+ 

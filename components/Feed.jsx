@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 
 import PromptCard from "./PromptCard";
 
-const PromptCardList = ({ data, handleTagClick }) => {
+const PromptCardList = ({ dat, handleTagClick }) => {
   return (
     <div className="mt-16 prompt_layout">
-      {data.map((post) => (
+      {dat?.map((post) => (
         <PromptCard
           key={post._id}
           post={post}
@@ -19,7 +20,9 @@ const PromptCardList = ({ data, handleTagClick }) => {
 };
 
 const Feed = () => {
-  const [allPosts, setAllPosts] = useState([]);
+  const fetcher = (...args) => fetch(...args).then((res) => res.json());
+  const { data, mutate, error, isLoading } = useSWR("/api/prompt", fetcher);
+  const [allPosts, setAllPosts] = useState(data);
 
   // Search states
   const [searchText, setSearchText] = useState("");
@@ -27,10 +30,12 @@ const Feed = () => {
   const [searchedResults, setSearchedResults] = useState([]);
 
   const fetchPosts = async () => {
-    const response = await fetch("/api/prompt", { cache: "no-store" });
-    const data = await response.json();
-
-    setAllPosts(data);
+    try {
+      const response = await fetch("/api/prompt", { cache: "no-store" });
+      mutate();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -82,12 +87,9 @@ const Feed = () => {
 
       {/* All Prompt */}
       {searchText ? (
-        <PromptCardList
-          data={searchedResults}
-          handleTagClick={handleTagClick}
-        />
+        <PromptCardList dat={searchedResults} handleTagClick={handleTagClick} />
       ) : (
-        <PromptCardList data={allPosts} handleTagClick={handleTagClick} />
+        <PromptCardList dat={allPosts} handleTagClick={handleTagClick} />
       )}
     </section>
   );
